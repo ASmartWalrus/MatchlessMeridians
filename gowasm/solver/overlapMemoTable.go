@@ -22,18 +22,7 @@ func (memo OverlapMemoTable) GetOverlap(kf kungfu.KungFu, otherKf kungfu.KungFu)
 	return v, ok
 }
 
-func (memo OverlapMemoTable) GetOrFindOverlap(kf kungfu.KungFu, otherKf kungfu.KungFu) int {
-	if overlap, ok := memo.GetOverlap(kf, otherKf); ok {
-		return overlap
-	}
-
-	if _, ok := memo.overlapMap[kf.MeridianBits()]; !ok {
-		memo.overlapMap[kf.MeridianBits()] = map[uint64]int{}
-	}
-	overlap := kf.FindPreOverlap(otherKf)
-	memo.overlapMap[kf.MeridianBits()][otherKf.MeridianBits()] = overlap
-	return overlap
-}
+// Seperate Memo + Retrieval due to incomplete memo table issue
 
 // Memo overlaps for all kfs against existing kfs and itself
 func (memo OverlapMemoTable) MemoNewOverlaps(kfs *[]kungfu.KungFu) {
