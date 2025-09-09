@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	kungfu "gowasm/kungfu"
 	solver "gowasm/solver"
 	"io"
@@ -34,5 +33,5 @@ func main() {
 	memoTable := solver.MakeMemo()
 	memoTable.MemoNewOverlaps(&allKfs)
 
-	fmt.Println(memoTable.OverlapMap())
+	solver.SolveKfs(&allKfs, memoTable)
 }

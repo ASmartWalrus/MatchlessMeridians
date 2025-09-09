@@ -53,7 +53,9 @@ func (memo OverlapMemoTable) MemoNewOverlaps(kfs *[]kungfu.KungFu) {
 			kf := kungfu.MakeKungFu("", kfBits)
 			for otherBits := range memo.overlapMap {
 				other := kungfu.MakeKungFu("", otherBits)
-				kfOverlaps[otherBits] = kf.FindPreOverlap(other)
+				if kfBits != otherBits {
+					kfOverlaps[otherBits] = kf.FindPreOverlap(other)
+				}
 			}
 		}
 	}
