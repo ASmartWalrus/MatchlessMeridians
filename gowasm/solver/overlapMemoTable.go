@@ -38,21 +38,31 @@ func (memo OverlapMemoTable) GetOrFindOverlap(kf kungfu.KungFu, otherKf kungfu.K
 // Memo overlaps for all kfs against existing kfs and itself
 func (memo OverlapMemoTable) MemoNewOverlaps(kfs *[]kungfu.KungFu) {
 	// Extend existing
-	for kfBits, kfOverlaps := range memo.overlapMap {
-		kf := kungfu.MakeKungFu("", kfBits)
-		for _, newKf := range *kfs {
+	for _, newKf := range *kfs {
+		// If a KF with existing meridians are already in memo, skip
+		if _, ok := memo.overlapMap[newKf.MeridianBits()]; ok {
+			continue
+		}
+
+		for kfBits, kfOverlaps := range memo.overlapMap {
+			kf := kungfu.MakeKungFu("", kfBits)
+
 			kfOverlaps[newKf.MeridianBits()] = kf.FindPreOverlap(newKf)
 		}
 	}
 
-	// Add overlaps for new kfs
-	for _, kf := range *kfs {
-		memo.overlapMap[kf.MeridianBits()] = map[uint64]int{}
+	// Add overlap maps for new kfs
+	for _, newKf := range *kfs {
+		if _, ok := memo.overlapMap[newKf.MeridianBits()]; !ok {
+			memo.overlapMap[newKf.MeridianBits()] = map[uint64]int{}
+		}
 	}
+
+	// Fill new empty overlap maps
 	for kfBits, kfOverlaps := range memo.overlapMap {
-		kf := kungfu.MakeKungFu("", kfBits)
-		for otherBits := range memo.overlapMap {
-			if kfBits != otherBits {
+		if len(kfOverlaps) == 0 {
+			kf := kungfu.MakeKungFu("", kfBits)
+			for otherBits := range memo.overlapMap {
 				other := kungfu.MakeKungFu("", otherBits)
 				kfOverlaps[otherBits] = kf.FindPreOverlap(other)
 			}
