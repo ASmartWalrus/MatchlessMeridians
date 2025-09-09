@@ -11,9 +11,25 @@ type KungFu struct {
 	length       int
 }
 
+func MakeKungFu(name string, meridianBits uint64) KungFu {
+	return KungFu{name, meridianBits, (bits.Len64(meridianBits) + 1) / 2}
+}
+
+func MakeKungFuFromStrings(name string, numberString string) KungFu {
+	var meridianBits uint64 = 0
+	for _, c := range numberString {
+		meridianBits = (meridianBits << 2) + (uint64(c) - 48)
+	}
+	return KungFu{name, meridianBits, (bits.Len64(meridianBits) + 1) / 2}
+}
+
 // returns Name
 func (kf KungFu) Name() string {
 	return kf.name
+}
+
+func (kf KungFu) MeridianBits() uint64 {
+	return kf.meridianBits
 }
 
 // returns Meridians represented with ⭗⟁⧈ as seen in game
@@ -41,29 +57,17 @@ func (kf KungFu) Length() int {
 	return kf.length
 }
 
-func New(name string, meridianBits uint64) KungFu {
-	return KungFu{name, meridianBits, (bits.Len64(meridianBits) + 1) / 2}
-}
-
-func FromStrings(name string, numberString string) KungFu {
-	var meridianBits uint64 = 0
-	for _, c := range numberString {
-		meridianBits = (meridianBits << 2) + (uint64(c) - 48)
-	}
-	return KungFu{name, meridianBits, (bits.Len64(meridianBits) + 1) / 2}
-}
-
 // This is a nightmare to explain, but its attempting to avoid any branching for optimization
 // This errors if kf extends past other (as keikaku intended)
-func (kf KungFu) checkConflict(other KungFu, i int) bool {
-	return (other.meridianBits>>((other.length-kf.length-i)*2)) & ^(uint64(0xFFFFFFFF)<<(kf.length*2)) == kf.meridianBits & ^(uint64(0xFFFFFFFF)<<(kf.length+i)*2)
+func (kf KungFu) checkOverlap(other KungFu, i int) bool {
+	return ((other.meridianBits >> ((other.length - kf.length - i) * 2)) & ^(uint64(0xFFFFFFFF) << (kf.length * 2))) == (kf.meridianBits & ^(uint64(0xFFFFFFFF) << ((kf.length + i) * 2)))
 }
 
 // Returns at which index does kf has a maximum overlap with other
 // Note: Pre-overlap means kf does not extend past end of other
 func (kf KungFu) FindPreOverlap(other KungFu) int {
 	i := other.length - kf.length
-	for ; i > -kf.length && !kf.checkConflict(other, i); i-- {
+	for ; i > -kf.length && !kf.checkOverlap(other, i); i-- {
 	}
 	return i
 }

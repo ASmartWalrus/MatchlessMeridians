@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	kungfu "gowasm/KungFu"
+	kungfu "gowasm/kungfu"
+	solver "gowasm/solver"
 	"io"
 	"os"
 )
@@ -20,8 +21,18 @@ func main() {
 
 	kfMap := map[string]kungfu.KungFu{}
 	for key, val := range jsonMap {
-		kfMap[key] = kungfu.FromStrings(key, val)
+		kfMap[key] = kungfu.MakeKungFuFromStrings(key, val)
 	}
 
-	fmt.Println(kfMap["Freeze Spell"].FindPreOverlap(kfMap["Golden Acupuncture"]))
+	allKfs := make([]kungfu.KungFu, len(kfMap))
+	i := 0
+	for _, kf := range kfMap {
+		allKfs[i] = kf
+		i = i + 1
+	}
+
+	memoTable := solver.MakeMemo()
+	memoTable.MemoNewOverlaps(&allKfs)
+
+	fmt.Println(memoTable.OverlapMap())
 }
