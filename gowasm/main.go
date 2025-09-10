@@ -33,5 +33,5 @@ func main() {
 	memoTable := solver.MakeMemo()
 	memoTable.MemoNewOverlaps(&allKfs)
 
-	solver.SolveKfs(&allKfs, memoTable)
+	solver.SolveKfs(allKfs, memoTable)
 }
