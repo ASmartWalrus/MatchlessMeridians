@@ -44,9 +44,7 @@ func getPerm(kfs []kungfu.KungFu, p []int) []kungfu.KungFu {
 	return result
 }
 
-// I should probably add a greedy implmentation internally as a good seed
-// for unusedKfs
-func SolveKfs(kfs []kungfu.KungFu, memo OverlapMemoTable) {
+func filterMergeables(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungFu {
 	unusedKfs := []kungfu.KungFu{}
 	for _, kf := range kfs {
 		mergeable := false
@@ -60,6 +58,50 @@ func SolveKfs(kfs []kungfu.KungFu, memo OverlapMemoTable) {
 			unusedKfs = append(unusedKfs, kf)
 		}
 	}
+	return unusedKfs
+}
+
+// Quick O(n^2) solution, useful for feeding into the brute force later on
+func SolveKfsGreedy(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungFu {
+	kfs = filterMergeables(kfs, memo)
+	kfGroups := make([][]kungfu.KungFu, len(kfs))
+	for i, kf := range kfs {
+		kfGroups[i] = []kungfu.KungFu{kf}
+	}
+
+	for len(kfGroups) > 1 {
+		leftIdx := -1
+		rightIdx := -1
+		maxLenReduction := -1
+		for i, kfG1 := range kfGroups {
+			for j, kfG2 := range kfGroups {
+				if i != j {
+					overlapPt, _ := memo.GetOverlap(kfG1[len(kfG1)-1], kfG2[0])
+					lenReduct := kfG1[len(kfG1)-1].Length() + overlapPt
+					if lenReduct > maxLenReduction {
+						leftIdx = i
+						rightIdx = j
+						maxLenReduction = lenReduct
+					}
+				}
+			}
+		}
+
+		merged := make([]kungfu.KungFu, len(kfGroups[leftIdx])+len(kfGroups[rightIdx]))
+		copy(merged[:], kfGroups[leftIdx])
+		copy(merged[len(kfGroups[leftIdx]):], kfGroups[rightIdx])
+
+		kfGroups[leftIdx] = merged
+		kfGroups[rightIdx] = kfGroups[len(kfGroups)-1]
+		kfGroups = kfGroups[:len(kfGroups)-1]
+	}
+	return kfGroups[0]
+}
+
+// I should probably add a greedy implmentation internally as a good seed
+// for unusedKfs
+func SolveKfs(kfs []kungfu.KungFu, memo OverlapMemoTable) {
+	unusedKfs := filterMergeables(kfs, memo)
 
 	kfLenStore := make([]int, len(unusedKfs))
 	lenToBeat := 10000 // If someone is doing this with 10000 meridians, something else has gone catastrophically wrong
