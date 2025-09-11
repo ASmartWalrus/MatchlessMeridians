@@ -36,5 +36,11 @@ func main() {
 
 	kfs := solver.SolveKfsGreedy(allKfs, memoTable)
 	fmt.Println(kfs)
+	kfs = solver.SolveKfsGreedy(allKfs, memoTable)
+	fmt.Println(kfs)
+	kfs = solver.SolveKfsGreedy(allKfs, memoTable)
+	fmt.Println(kfs)
+	kfs = solver.SolveKfsGreedy(allKfs, memoTable)
+	fmt.Println(kfs)
 	solver.SolveKfs(kfs, memoTable)
 }
