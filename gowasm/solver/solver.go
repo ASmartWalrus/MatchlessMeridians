@@ -3,48 +3,10 @@ package solver
 import (
 	"fmt"
 	kungfu "gowasm/kungfu"
+	perm "gowasm/solver/permute"
 )
 
-// Permutation Code adapted from Paul Hankin at SO
-// https://stackoverflow.com/a/30230552
-// Returns left-most change
-func nextPerm(p []int) int {
-	for i := len(p) - 1; i >= 0; i-- {
-		if i == 0 || p[i] < len(p)-i-1 {
-			p[i]++
-			return i
-		}
-		p[i] = 0
-	}
-	return -1
-}
-
-// Generate the next permutation where item at idx is different
-// Returns left-most
-func nextPermDiffAtIdx(p []int, idx int) int {
-	for i := len(p) - 1; i > idx; i-- {
-		p[i] = 0
-	}
-	for i := idx; i >= 0; i-- {
-		if i == 0 || p[i] < len(p)-i-1 {
-			p[i]++
-			return i
-		}
-		p[i] = 0
-	}
-	return -1
-}
-
-func getPerm(kfs []kungfu.KungFu, p []int) []kungfu.KungFu {
-	result := make([]kungfu.KungFu, len(kfs))
-	copy(result, kfs)
-	for i, v := range p {
-		result[i], result[i+v] = result[i+v], result[i]
-	}
-	return result
-}
-
-func filterMergeables(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungFu {
+func FilterMergeables(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungFu {
 	unusedKfs := []kungfu.KungFu{}
 	for _, kf := range kfs {
 		mergeable := false
@@ -63,7 +25,6 @@ func filterMergeables(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungF
 
 // Quick O(n^2) solution, useful for feeding into the brute force later on
 func SolveKfsGreedy(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungFu {
-	kfs = filterMergeables(kfs, memo)
 	kfGroups := make([][]kungfu.KungFu, len(kfs))
 	for i, kf := range kfs {
 		kfGroups[i] = []kungfu.KungFu{kf}
@@ -101,15 +62,13 @@ func SolveKfsGreedy(kfs []kungfu.KungFu, memo OverlapMemoTable) []kungfu.KungFu 
 // I should probably add a greedy implmentation internally as a good seed
 // for unusedKfs
 func SolveKfs(kfs []kungfu.KungFu, memo OverlapMemoTable) {
-	unusedKfs := filterMergeables(kfs, memo)
-
-	kfLenStore := make([]int, len(unusedKfs))
+	kfLenStore := make([]int, len(kfs))
 	lenToBeat := 10000 // If someone is doing this with 10000 meridians, something else has gone catastrophically wrong
-	permToBeat := unusedKfs
+	permToBeat := kfs
 	changeIdx := 0
-	perm := unusedKfs
+	kfPerm := kfs
 	runs := 0
-	for p := make([]int, len(unusedKfs)); p[0] < len(p); {
+	for p := make([]int, len(kfs)); p[0] < len(p); {
 		runs = runs + 1
 		if runs > 10000000 {
 			fmt.Println(p)
@@ -120,17 +79,17 @@ func SolveKfs(kfs []kungfu.KungFu, memo OverlapMemoTable) {
 		}
 
 		fastQuit := false
-		for i := changeIdx; i < len(unusedKfs); i++ {
+		for i := changeIdx; i < len(kfs); i++ {
 			if i == 0 {
-				kfLenStore[0] = perm[0].Length()
+				kfLenStore[0] = kfPerm[0].Length()
 			} else {
-				overlapPt, _ := memo.GetOverlap(perm[i-1], perm[i])
-				kfLenStore[i] = kfLenStore[i-1] - (perm[i-1].Length() + overlapPt) + perm[i].Length()
+				overlapPt, _ := memo.GetOverlap(kfPerm[i-1], kfPerm[i])
+				kfLenStore[i] = kfLenStore[i-1] - (kfPerm[i-1].Length() + overlapPt) + kfPerm[i].Length()
 			}
 			if kfLenStore[i] >= lenToBeat {
 				// Try next permutation that's different at index i
-				changeIdx = nextPermDiffAtIdx(p, i)
-				perm = getPerm(unusedKfs, p)
+				changeIdx = perm.NextPerm(p)
+				kfPerm = perm.GetPerm(kfs, p)
 				fastQuit = true
 				break
 			}
@@ -140,11 +99,11 @@ func SolveKfs(kfs []kungfu.KungFu, memo OverlapMemoTable) {
 			continue
 		}
 
-		lenToBeat = kfLenStore[len(unusedKfs)-1]
-		permToBeat = perm
+		lenToBeat = kfLenStore[len(kfs)-1]
+		permToBeat = kfPerm
 		// Try next lexigraphic permutation
-		changeIdx = nextPerm(p)
-		perm = getPerm(unusedKfs, p)
+		changeIdx = perm.NextPerm(p)
+		kfPerm = perm.GetPerm(kfs, p)
 	}
 	fmt.Println(permToBeat)
 }

@@ -1,0 +1,39 @@
+
+.KungFuButton {
+  padding: 0.2rem;
+  border-radius: 1em;
+  border:  solid transparent;
+  font-family: AssassinNinja;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+
+  &:hover {
+    border-color: #646cff;
+  }
+
+  h4 {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    margin-left: 0.2rem;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    text-align: left;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: 2rem;
+  }
+
+  p {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    margin-top: -0.5rem;
+    overflow: hidden;
+    text-align: right;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: 2rem;
+  }
+}

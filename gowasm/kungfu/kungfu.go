@@ -32,7 +32,7 @@ func (kf KungFu) MeridianBits() uint64 {
 	return kf.meridianBits
 }
 
-// returns Meridians represented with ⭗⟁⧈ as seen in game
+// returns Meridians represented with ⭗⟁⧈ similtar to in-game
 // TODO: Maybe check if its reasonable to optimize this (it probably shouldn't be called that much anyways)
 func (kf KungFu) Meridians() string {
 	remainingBits := kf.meridianBits
