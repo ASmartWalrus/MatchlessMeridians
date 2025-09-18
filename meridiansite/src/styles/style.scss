@@ -7,14 +7,25 @@ $color-scheme: dark;
        url('/fonts/AssassinNinja.otf') format('opentype');
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
 :root {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
   font-family: AssassinNinja;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 1000;
  
   color-scheme: $color-scheme;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #5a5a5a;
  
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,28 +35,21 @@ $color-scheme: dark;
 }
  
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   text-align: center;
 }
 
 .Solver {
+  padding: 0;
+  margin: 0;
   height: 95vh;
 }
 
 .Footer {
+  padding: 0;
+  margin: 0;
   height: 5vh;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
