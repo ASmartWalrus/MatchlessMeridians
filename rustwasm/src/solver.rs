@@ -1,9 +1,13 @@
 use std::{collections::HashMap, usize, vec};
+
+use serde::{Deserialize, Serialize};
+
 use crate::kungfu::KungFu;
-use crate::permute::{self, get_perm, next_perm, next_perm_at_idx};
+use crate::permute::{get_perm, next_perm, next_perm_at_idx};
 
 type OverlapMemo = HashMap<u64, HashMap<u64, i32>>;
 
+#[derive(Serialize, Deserialize)]
 enum SolveStage {
     Init,
     OverlapMemoed,
@@ -13,27 +17,26 @@ enum SolveStage {
 }
 
 // Create a Solver instance that will work through each solution stage
-// An adapted ver. of this is probably going to be passed in and out from WASI
-// No references types allowed because it needs to cross WASI barrier
- pub struct Solver {
+#[derive(Serialize, Deserialize)]
+pub struct Solver {
     pub kfs : Vec<KungFu>,
     stage : SolveStage,
 
     // Cache: Stage
-    pub memo : OverlapMemo,
+    memo : OverlapMemo,
 
     // Stage: Filtered
-    pub filtered_kfs : Vec<usize>,
+    pub filtered_kf_idxs : Vec<usize>,
 
     // Stage: Greedy Solved
-    pub greedy_kfs : Vec<usize>,
+    pub greedy_kf_idxs : Vec<usize>,
     pub greedy_len : usize,
 
     // Stage: Brute Solving
-    pub min_perm : Vec<usize>,
-    pub min_len : usize,
-    pub p : Vec<usize>,
-    pub p_lens : Vec<usize>,
+    pub min_perm_idxs : Vec<usize>,
+    min_len : usize,
+    p : Vec<usize>,
+    p_lens : Vec<usize>,
 }
 
 impl Solver {
@@ -43,12 +46,12 @@ impl Solver {
             memo : OverlapMemo::new(),
             stage : SolveStage::Init,
 
-            filtered_kfs : Vec::new(),
+            filtered_kf_idxs : Vec::new(),
 
-            greedy_kfs : Vec::new(),
+            greedy_kf_idxs : Vec::new(),
             greedy_len : 0,
 
-            min_perm : Vec::new(),
+            min_perm_idxs : Vec::new(),
             min_len : 0,
             p : Vec::new(),
             p_lens : Vec::new(),
@@ -68,18 +71,16 @@ impl Solver {
                 }
             }
         }
-        
         self.stage = SolveStage::OverlapMemoed;
     }
 
     fn filter_mergables(&mut self) {
-        self.filtered_kfs = (0..self.kfs.len()).collect();
+        self.filtered_kf_idxs = (0..self.kfs.len()).collect();
 
-        // Deduplicate first, merge doesn't dedup due to it checking against diff acupoint bits and dupes have same acupoint bits
-        self.filtered_kfs.dedup_by_key(|v| self.kfs[*v].acupoint_bits);
+        self.filtered_kf_idxs.dedup_by_key(|v| self.kfs[*v].acupoint_bits);
 
         // check against every existing acupoints signature
-        self.filtered_kfs = self.filtered_kfs.iter().filter(|i| -> bool {
+        self.filtered_kf_idxs = self.filtered_kf_idxs.iter().filter(|i| -> bool {
             self.memo.get(&self.kfs[**i].acupoint_bits).and_then(|kf_map| kf_map.iter().find(|(_, v)| **v >= 0)).is_none()
         }).map(|v| *v).collect();
     
@@ -87,7 +88,7 @@ impl Solver {
     }
 
     fn greedy_solve(&mut self) {
-        let mut kf_groups : Vec::<Vec<usize>> = (0..self.filtered_kfs.len()).map(|i| vec![i]).collect();
+        let mut kf_groups : Vec::<Vec<usize>> = self.filtered_kf_idxs.iter().map(|i| vec![*i]).collect();
 
         while kf_groups.len() > 1 {
             let mut left_idx = 0;
@@ -109,11 +110,25 @@ impl Solver {
             }
 
             let mut temp = kf_groups.remove(right_idx);
-            kf_groups[left_idx].append(&mut temp);
+            kf_groups[left_idx - (right_idx < left_idx) as usize].append(&mut temp);
         }
 
-        self.min_len = 0;
-        self.greedy_kfs = kf_groups.remove(0);
+        self.greedy_kf_idxs = kf_groups.remove(0);
+        // TODO: Some cleanup here, I hate how this looks when it could prolly be done via accumalator
+        self.greedy_len = 0;
+        let mut prev_kf_idx : usize = 0;
+        for (i, kf_idx) in self.greedy_kf_idxs.iter().enumerate() {
+            if i == 0 {
+                self.greedy_len = self.kfs[*kf_idx].length;
+            } else {
+                let overlap = self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits];
+                self.greedy_len += self.kfs[*kf_idx].length - (self.kfs[prev_kf_idx].length as i32 + overlap) as usize ;
+            }
+            prev_kf_idx = *kf_idx;
+        }
+        
+
+        self.min_len = self.greedy_len;
         self.stage = SolveStage::BruteSolving;
     }
 
@@ -124,14 +139,14 @@ impl Solver {
         let mut p_chg_idx : usize = 0;
 
         // Move init somewhere else maybe
-        if self.min_perm.len() == 0 {
-            self.min_perm = self.greedy_kfs.clone();
-            self.p.resize(self.greedy_kfs.len(), 0);
-            self.p_lens.resize(self.min_perm.len(), 0);
+        if self.min_perm_idxs.len() == 0 {
+            self.min_perm_idxs = self.greedy_kf_idxs.clone();
+            self.p.resize(self.greedy_kf_idxs.len(), 0);
+            self.p_lens.resize(self.min_perm_idxs.len(), 0);
         }
 
         while self.p[0] < self.kfs.len() && runs <= MAX_RUNS{
-            let mut kf_perm = self.greedy_kfs.clone();
+            let mut kf_perm = self.greedy_kf_idxs.clone();
             get_perm::<usize>(kf_perm.as_mut_slice(), &self.p);
 
             let mut fast_quit = false;
@@ -155,7 +170,7 @@ impl Solver {
                 continue;
             }
 
-            self.min_perm = kf_perm;
+            self.min_perm_idxs = kf_perm;
             self.min_len = *self.p_lens.last().unwrap();
             // Try next lexigraphic permutation
             p_chg_idx = next_perm(&mut self.p);

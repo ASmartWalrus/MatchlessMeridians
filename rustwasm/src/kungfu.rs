@@ -1,23 +1,25 @@
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::wasm_bindgen;
 
-
-#[derive(Clone)]
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+#[derive(Serialize, Deserialize)]
 pub struct KungFu {
-	pub name: String,
 	pub acupoint_bits: u64,
 	pub length: usize
 }
 
 impl KungFu {
-    pub fn from_bits(name: String, meridian_bits: u64) -> Self {
-        return KungFu{ name : name, acupoint_bits : meridian_bits, length : ((u64::BITS - meridian_bits.leading_zeros() + 1) / 2) as usize}
+    pub fn from_bits( meridian_bits: u64 ) -> Self {
+        return KungFu{ acupoint_bits : meridian_bits, length : ((u64::BITS - meridian_bits.leading_zeros() + 1) / 2) as usize}
     }
 
-    pub fn from_strings(name: String, number_string: &String) -> Self {
+    pub fn from_string( number_string: &String) -> Self {
         let mut meridian_bits : u64 = 0;
         for c in number_string.chars() {
             meridian_bits = (meridian_bits << 2) + ((c as u64) - 48);
         }
-        return Self::from_bits(name, meridian_bits);
+        return Self::from_bits(meridian_bits);
     }
 
     pub fn check_overlap(self : &Self, other : &Self, i : i32) -> bool {
