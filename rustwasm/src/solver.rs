@@ -133,7 +133,7 @@ impl Solver {
     }
 
     fn brute_solve(&mut self) {
-        const MAX_RUNS : u32 = 1000000;
+        const MAX_RUNS : u32 = 1000;
         let mut runs = 0u32;
 
         let mut p_chg_idx : usize = 0;
