@@ -27,7 +27,7 @@ impl KungFu {
     }
 
     pub fn find_overlap(self : &Self, other : &Self) -> i32 {
-        let mut i : i32 = (other.length - self.length) as i32;
+        let mut i : i32 = other.length as i32 - self.length as i32;
         while i > -(self.length as i32) && !self.check_overlap(other, i) {
             i -= 1;
         }

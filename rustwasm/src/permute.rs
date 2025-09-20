@@ -10,7 +10,7 @@ pub fn next_perm(p : &mut[usize]) -> usize {
 }
 
 pub fn next_perm_at_idx(p : &mut[usize], idx : usize) -> usize {
-	for i in (idx+1..p.len()).rev() {
+	for i in idx+1..p.len() {
         p[i] = 0;
     }
 	for i in (0..=idx).rev() {
@@ -26,6 +26,9 @@ pub fn next_perm_at_idx(p : &mut[usize], idx : usize) -> usize {
 
 pub fn get_perm<T : Copy>(arr : &mut[T], p : &[usize]) {
 	for (i, v) in p.iter().enumerate() {
+		if i + v >= arr.len() {
+			panic!("{i} wat")
+		}
 		(arr[i], arr[i+v]) = (arr[i+v], arr[i]);
 	}
 }

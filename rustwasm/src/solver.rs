@@ -129,23 +129,19 @@ impl Solver {
         
 
         self.min_len = self.greedy_len;
+        self.min_perm_idxs = self.greedy_kf_idxs.clone();
+        self.p.resize(self.greedy_kf_idxs.len(), 0);
+        self.p_lens.resize(self.min_perm_idxs.len(), 0);
         self.stage = SolveStage::BruteSolving;
     }
 
     fn brute_solve(&mut self) {
-        const MAX_RUNS : u32 = 1000;
+        let max_runs : u32 = 10000; // This should be adjusted so that it takes same time as Greedy
         let mut runs = 0u32;
 
         let mut p_chg_idx : usize = 0;
 
-        // Move init somewhere else maybe
-        if self.min_perm_idxs.len() == 0 {
-            self.min_perm_idxs = self.greedy_kf_idxs.clone();
-            self.p.resize(self.greedy_kf_idxs.len(), 0);
-            self.p_lens.resize(self.min_perm_idxs.len(), 0);
-        }
-
-        while self.p[0] < self.kfs.len() && runs <= MAX_RUNS{
+        while self.p[0] < self.greedy_kf_idxs.len() && runs <= max_runs{
             let mut kf_perm = self.greedy_kf_idxs.clone();
             get_perm::<usize>(kf_perm.as_mut_slice(), &self.p);
 
@@ -162,7 +158,7 @@ impl Solver {
                     p_chg_idx = next_perm_at_idx(&mut self.p, i);
                     fast_quit = true;
                     runs += 1;
-                    break
+                    break;
                 }
             }
 
@@ -175,24 +171,22 @@ impl Solver {
             // Try next lexigraphic permutation
             p_chg_idx = next_perm(&mut self.p);
             runs += 1;
+        }
 
-            if self.p[0] >= self.kfs.len() {
-                self.stage = SolveStage::Finished;
-            }
+        if self.p[0] >= self.greedy_kf_idxs.len() {
+            self.stage = SolveStage::Finished;
         }
     }
 
     // Until I figure out a better method, this will do for a prototype
     // TODO: Fix arbitrary step weights
-    pub fn progress(&mut self, steps : usize) {
-        for _ in 0..steps {
-            match self.stage {
-                SolveStage::Init => self.memo_overlaps(),
-                SolveStage::OverlapMemoed => self.filter_mergables(),
-                SolveStage::Filtered => self.greedy_solve(),
-                SolveStage::BruteSolving => self.brute_solve(),
-                SolveStage::Finished => {}
-            }
+    pub fn progress(&mut self) {
+        match self.stage {
+            SolveStage::Init => self.memo_overlaps(),
+            SolveStage::OverlapMemoed => self.filter_mergables(),
+            SolveStage::Filtered => self.greedy_solve(),
+            SolveStage::BruteSolving => {self.brute_solve()},
+            SolveStage::Finished => {}
         }
     }
 }
