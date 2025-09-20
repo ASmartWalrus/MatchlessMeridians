@@ -30,13 +30,13 @@ pub struct Solver {
 
     // Stage: Greedy Solved
     pub greedy_kf_idxs : Vec<usize>,
-    pub greedy_len : usize,
+    pub greedy_len : u32,
 
     // Stage: Brute Solving
     pub min_perm_idxs : Vec<usize>,
-    min_len : usize,
+    min_len : u32,
     p : Vec<usize>,
-    p_lens : Vec<usize>,
+    p_lens : Vec<u32>,
 }
 
 impl Solver {
@@ -122,7 +122,7 @@ impl Solver {
                 self.greedy_len = self.kfs[*kf_idx].length;
             } else {
                 let overlap = self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits];
-                self.greedy_len += self.kfs[*kf_idx].length - (self.kfs[prev_kf_idx].length as i32 + overlap) as usize ;
+                self.greedy_len += self.kfs[*kf_idx].length - (self.kfs[prev_kf_idx].length as i32 + overlap) as u32;
             }
             prev_kf_idx = *kf_idx;
         }
@@ -151,7 +151,7 @@ impl Solver {
                     self.p_lens[0] = self.kfs[kf_perm[0]].length;
                 } else {
                     let overlap = self.memo[&self.kfs[kf_perm[i - 1]].acupoint_bits][&self.kfs[kf_perm[i]].acupoint_bits];
-                    self.p_lens[i] = self.p_lens[i-1] - (self.kfs[kf_perm[i-1]].length as i32 + overlap) as usize + self.kfs[kf_perm[i]].length;
+                    self.p_lens[i] = self.p_lens[i-1] - (self.kfs[kf_perm[i-1]].length as i32 + overlap) as u32 + self.kfs[kf_perm[i]].length;
                 }
                 if self.p_lens[i] >= self.min_len {
                     // Try next permutation that's different at index i

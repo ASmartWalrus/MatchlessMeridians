@@ -6,12 +6,12 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[derive(Serialize, Deserialize)]
 pub struct KungFu {
 	pub acupoint_bits: u64,
-	pub length: usize
+	pub length: u32
 }
 
 impl KungFu {
     pub fn from_bits( meridian_bits: u64 ) -> Self {
-        return KungFu{ acupoint_bits : meridian_bits, length : ((u64::BITS - meridian_bits.leading_zeros() + 1) / 2) as usize}
+        return KungFu{ acupoint_bits : meridian_bits, length : ((u64::BITS - meridian_bits.leading_zeros() + 1) / 2) as u32}
     }
 
     pub fn from_string( number_string: &String) -> Self {
