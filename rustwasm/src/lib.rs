@@ -1,7 +1,5 @@
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-extern crate console_error_panic_hook;
-use std::panic;
 use crate::{kungfu::KungFu, solver::Solver};
 
 mod kungfu;
@@ -10,16 +8,12 @@ mod solver;
 
 #[wasm_bindgen]
 pub fn init_solver(meridian_strs : Vec<String>) -> JsValue {
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
-    
     let kfs : Vec<KungFu> = meridian_strs.iter().map(|x | KungFu::from_string(x)).collect();
     serde_wasm_bindgen::to_value(&Solver::new(kfs.as_slice())).unwrap()
 }
 
 #[wasm_bindgen]
 pub fn step_solver(solver_js : JsValue) -> JsValue {
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
-
     let mut solver : Solver = serde_wasm_bindgen::from_value(solver_js).unwrap();
     solver.progress();
     return serde_wasm_bindgen::to_value(&solver).unwrap();
