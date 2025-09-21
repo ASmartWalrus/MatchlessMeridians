@@ -2,7 +2,6 @@ import "@/styles/Solver/Solver.scss"
 import BaseGame from "@/assets/BaseGame.json"
 import KungFuList from "@/components/Solver/KungFuList.jsx"
 import KungFuSolution from "./KungFuSolution";
-import init, { init_solver, step_solver } from '@/pkg/rustwasm';
 import { useState } from "react";
 
 function Solver() {
@@ -35,7 +34,7 @@ function Solver() {
           }
         }));
       }}/>
-      <KungFuSolution/>
+      <KungFuSolution kfList={kfList}/>
     </flexbox>
   )
 }
