@@ -30,11 +30,11 @@ pub struct Solver {
 
     // Stage: Greedy Solved
     pub greedy_kf_idxs : Vec<usize>,
-    pub greedy_len : u32,
+    pub greedy_mstring : String,
 
     // Stage: Brute Solving
     pub min_perm_idxs : Vec<usize>,
-    min_len : u32,
+    pub min_mstring : String,
     p : Vec<usize>,
     p_lens : Vec<u32>,
 }
@@ -49,10 +49,10 @@ impl Solver {
             filtered_kf_idxs : Vec::new(),
 
             greedy_kf_idxs : Vec::new(),
-            greedy_len : 0,
+            greedy_mstring : String::new(),
 
             min_perm_idxs : Vec::new(),
-            min_len : 0,
+            min_mstring : String::new(),
             p : Vec::new(),
             p_lens : Vec::new(),
         }
@@ -115,20 +115,19 @@ impl Solver {
 
         self.greedy_kf_idxs = kf_groups.remove(0);
         // TODO: Some cleanup here, I hate how this looks when it could prolly be done via accumalator
-        self.greedy_len = 0;
         let mut prev_kf_idx : usize = 0;
         for (i, kf_idx) in self.greedy_kf_idxs.iter().enumerate() {
             if i == 0 {
-                self.greedy_len = self.kfs[*kf_idx].length;
+                self.greedy_mstring = (&self.kfs[*kf_idx]).into();
             } else {
-                let overlap = self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits];
-                self.greedy_len += self.kfs[*kf_idx].length - (self.kfs[prev_kf_idx].length as i32 + overlap) as u32;
+                let overlap = (self.kfs[prev_kf_idx].length as i32 + self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits]) as usize;
+                self.greedy_mstring.push_str(&Into::<String>::into(&self.kfs[*kf_idx])[overlap..] );
             }
             prev_kf_idx = *kf_idx;
         }
         
 
-        self.min_len = self.greedy_len;
+        self.min_mstring = self.greedy_mstring.clone();
         self.min_perm_idxs = self.greedy_kf_idxs.clone();
         self.p.resize(self.greedy_kf_idxs.len(), 0);
         self.p_lens.resize(self.min_perm_idxs.len(), 0);
@@ -153,7 +152,7 @@ impl Solver {
                     let overlap = self.memo[&self.kfs[kf_perm[i - 1]].acupoint_bits][&self.kfs[kf_perm[i]].acupoint_bits];
                     self.p_lens[i] = self.p_lens[i-1] - (self.kfs[kf_perm[i-1]].length as i32 + overlap) as u32 + self.kfs[kf_perm[i]].length;
                 }
-                if self.p_lens[i] >= self.min_len {
+                if self.p_lens[i] >= self.min_mstring.len() as u32 {
                     // Try next permutation that's different at index i
                     p_chg_idx = next_perm_at_idx(&mut self.p, i);
                     fast_quit = true;
@@ -166,8 +165,20 @@ impl Solver {
                 continue;
             }
 
+            // Update min mstring
             self.min_perm_idxs = kf_perm;
-            self.min_len = *self.p_lens.last().unwrap();
+            let mut prev_kf_idx : usize = 0;
+            for (i, kf_idx) in self.min_perm_idxs.iter().enumerate() {
+                if i == 0 {
+                    self.min_mstring = (&self.kfs[*kf_idx]).into();
+                } else {
+                    let overlap: usize = (self.kfs[prev_kf_idx].length as i32 + self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits]) as usize;
+                    self.min_mstring.push_str(&Into::<String>::into(&self.kfs[*kf_idx])[overlap..] );
+                }
+                prev_kf_idx = *kf_idx;
+            }
+
+
             // Try next lexigraphic permutation
             p_chg_idx = next_perm(&mut self.p);
             runs += 1;

@@ -8,7 +8,7 @@ mod solver;
 
 #[wasm_bindgen]
 pub fn init_solver(meridian_strs : Vec<String>) -> JsValue {
-    let kfs : Vec<KungFu> = meridian_strs.iter().map(|x | KungFu::from_string(x)).collect();
+    let kfs : Vec<KungFu> = meridian_strs.iter().map(|x | KungFu::from(x)).collect();
     serde_wasm_bindgen::to_value(&Solver::new(kfs.as_slice())).unwrap()
 }
 
