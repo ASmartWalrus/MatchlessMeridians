@@ -1,4 +1,4 @@
-import "@/styles/Solver/KungFuList.scss"
+import "@/styles/Solver/KungFuList.scss?style"
 import KungFuButton from "@/components/Solver/KungFuButton.jsx"
 
 function KungFuList({kungfus, onClick}) {

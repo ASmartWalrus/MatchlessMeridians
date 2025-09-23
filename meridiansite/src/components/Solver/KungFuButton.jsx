@@ -1,4 +1,4 @@
-import "@/styles/Solver/KungFuButton.scss"
+import "@/styles/Solver/KungFuButton.scss?style"
 
 function KungFuButton({name, meridians, toggled, onClick}) {
   return (

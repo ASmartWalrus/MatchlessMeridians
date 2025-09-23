@@ -1,4 +1,4 @@
-import "@/styles/Footer.scss"
+import "@/styles/Footer.scss?style"
 
 function Footer({name, meridians, onClick}) {
   return (

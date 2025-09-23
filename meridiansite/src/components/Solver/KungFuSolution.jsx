@@ -1,4 +1,4 @@
-import "@/styles/Solver/KungFuSolution.scss"
+import "@/styles/Solver/KungFuSolution.scss?style"
 import { useEffect, useRef, useState } from "react"
 import WasmWorker from "@/utils/wasm.worker.js?worker"
 import { meridian_format } from "../../utils/mstring";

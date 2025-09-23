@@ -1,4 +1,4 @@
-import "@/styles/Solver/Solver.scss"
+import "@/styles/Solver/Solver.scss?style"
 import BaseGame from "@/assets/BaseGame.json"
 import KungFuList from "@/components/Solver/KungFuList.jsx"
 import KungFuSolution from "./KungFuSolution";

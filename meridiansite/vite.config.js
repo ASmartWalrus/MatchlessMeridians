@@ -4,10 +4,13 @@ import sass from 'vite-plugin-sass';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), sass()],
+  plugins: [sass(), react()],
   resolve: {
     alias: {
       "@": "/src",
     },
   },
+  worker: {
+    format: 'es'
+  }
 })
