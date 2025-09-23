@@ -36,6 +36,7 @@ jobs:
 
     - name: npm install, build, and test
       run: |
+        cd meridiansite
         npm install
         npm run build
 
