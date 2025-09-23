@@ -1,0 +1,15 @@
+{
+  "name": "rustwasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "rustwasm_bg.wasm",
+    "rustwasm.js",
+    "rustwasm.d.ts"
+  ],
+  "main": "rustwasm.js",
+  "types": "rustwasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
