@@ -4,7 +4,7 @@ import sass from 'vite-plugin-sass';
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/MatchlessMeridans/',
+  base: '/MatchlessMeridians/',
   plugins: [sass(), react()],
   resolve: {
     alias: {
