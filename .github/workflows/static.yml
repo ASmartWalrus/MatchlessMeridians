@@ -31,16 +31,15 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        path: ./meridiansite
         node-version: 20
         cache: 'npm'
+        cache-dependency-path: ./meridiansite/package-lock.json
 
     - name: npm install, build, and test
-      with:
-        path: ./meridiansite
       run: |
         npm install
         npm run build
+      working-directory: ./meridiansite
 
     - name: Setup Pages
       uses: actions/configure-pages@v5
