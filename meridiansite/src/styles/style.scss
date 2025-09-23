@@ -24,7 +24,7 @@ html, body {
   font-weight: 1000;
  
   color-scheme: $color-scheme;
-  color: rgba(255, 255, 255, 0.87);
+  color: rgba(255, 255, 255, 1);
   background-color: #5a5a5a;
  
   font-synthesis: none;
@@ -45,11 +45,11 @@ html, body {
 .Solver {
   padding: 0;
   margin: 0;
-  height: 95vh;
+  height: 97vh;
 }
 
 .Footer {
   padding: 0;
   margin: 0;
-  height: 5vh;
+  height: 3vh;
 }

@@ -1,69 +1,51 @@
 import "@/styles/Solver/KungFuSolution.scss"
 import { useEffect, useRef, useState } from "react"
-import init, { init_solver, step_solver } from '@/pkg/rustwasm';
+import WasmWorker from "@/utils/wasm.worker.js?worker"
+import { meridian_format } from "../../utils/mstring";
 
 function KungFuSolution({kfList}) {
-  const [solveKfs, setSolveKfs] = useState([])
+  const worker = useRef(null);
   const [ss, setSS] = useState(null)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSS((ss) => {
-        if (ss != null) {
-          return step_solver(ss)
-        }
-      })
-    }, 200);
+    worker.current = new WasmWorker();
+    worker.current.onmessage = (e) => {
+      console.log(e.data)
+      setSS(e.data)
+    }
 
     return () => {
-      clearInterval(interval)
-    }; 
-  }, []); 
+      worker.current.terminate();
+    };
+  }, []);
 
   useEffect(() => {
-    const newSolveKfs = kfList.filter((v) => v.toggled).map((v) => v.mstring)
-    setSolveKfs(newSolveKfs)
-    if (newSolveKfs.length > 1) {
-      setSS(init_solver(newSolveKfs));
-    } else {
-      setSS(null);
-    }
+    worker.current.postMessage(kfList.filter((v) => v.toggled).map((v) => v.mstring));
   }, [kfList]);
-
-
 
   return (
     <div className="KungFuSolution">
-      <h2>Solving for {solveKfs.length} KungFus</h2>
-        {solveKfs.length > 1 ?
-          <div>
-            {ss.stage}
-            <h2>Memo-izing Individual Overlaps: {ss.memo.size > 0 ? `${ss.memo.size * (ss.memo.size - 1)} Overlaps` : "Not Done"} </h2>
-            <h2>Filtering Mergeables: {ss.filtered_kf_idxs.length > 0 ? `${ss.kfs.length - ss.filtered_kf_idxs.length} Filtered` : "Not Done"}</h2>
-            <h2>Quick Solving: {ss.greedy_mstring.length > 0 ? `${ss.greedy_mstring.split('').map((c) => {
-              switch(c) {
-              case "1":
-                return "◎"
-              case "2":
-                // code block
-                return "△"
-              default:
-                return "◻"
-              } 
-            }).join("")} (${ss.greedy_mstring.length})` : "Not Done"} </h2>
-            <h2>Brute Solving: {ss.min_mstring.length > 0 ? `${ss.min_mstring.split('').map((c) => {
-              switch(c) {
-              case "1":
-                return "◎"
-              case "2":
-                // code block
-                return "△"
-              default:
-                return "◻"
-              } 
-            }).join("")} (${ss.min_mstring.length})` : "Not Done"} </h2>
-          </div>
-        : "Bruh"}
+      {ss != null ?
+        <div>
+          <h1>Solving for {ss.kfs.length} KungFus</h1>
+          <h2>Current Progress:</h2>
+          <h3>
+            <span className="highlight">Initialized</span>
+            {" - "}
+            <span className={ss.memo.size > 0 ? "highlight" : "darken"}>Memorized</span>
+            {" - "}
+            <span className={ss.filtered_kf_idxs.length > 0 ? "highlight" : "darken"}>Filtered</span>
+            {" - "} 
+            <span className={ss.greedy_mstring.length > 0 ? "highlight" : "darken"}>Fast Solved</span>
+            {" - "} 
+            <span className={ss.stage == "Finished" ? "highlight" : "darken"}>Brute Solved</span>
+          </h3>
+          <h2>Quick Solution ({ss.greedy_mstring.length > 0 ? ss.greedy_mstring.length : "?"} Acupoints):</h2>
+          <h3>{ss.greedy_mstring.length > 0 ? `${meridian_format(ss.greedy_mstring)}` : "???"}</h3>
+          <h2>Best Solution {ss.stage == "Finished" ? "" : "So Far "}({ss.min_mstring.length > 0 ? ss.min_mstring.length : "?"} Acupoints):</h2>
+          <h3>{ss.min_mstring.length > 0 ? `${meridian_format(ss.min_mstring)}` : "???"}</h3>
+        </div>
+      : <h1>A Solution Will Appear Here After You Select atleast 2 Inner KungFus</h1>}
     </div>
   )
 }

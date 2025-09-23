@@ -3,28 +3,19 @@ import BaseGame from "@/assets/BaseGame.json"
 import KungFuList from "@/components/Solver/KungFuList.jsx"
 import KungFuSolution from "./KungFuSolution";
 import { useState } from "react";
+import { meridian_format } from "../../utils/mstring";
 
 function Solver() {
   // Could do some work to add mods and customs, but not feeling it
   const baseGameKungfus = Object.entries(BaseGame).
-    map(([key, value]) => ({ name : key, meridians : value.split('').map((c) => {
-      switch(c) {
-      case "1":
-        return "◎"
-      case "2":
-        // code block
-        return "△"
-      default:
-        return "◻"
-      } 
-    }),
+    map(([key, value]) => ({ name : key, meridians : meridian_format(value),
     toggled : false,
     mstring : value
   }));
   const [kfList, setKfList] = useState(baseGameKungfus);
 
   return (
-    <flexbox className="Solver">
+    <div className="Solver">
       <KungFuList kungfus={kfList} onClick={(i) => {
         setKfList(kfList.map((kf, kf_idx) => {
           if (i === kf_idx) {
@@ -35,7 +26,7 @@ function Solver() {
         }));
       }}/>
       <KungFuSolution kfList={kfList}/>
-    </flexbox>
+    </div>
   )
 }
 
