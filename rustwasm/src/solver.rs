@@ -135,7 +135,7 @@ impl Solver {
     }
 
     fn brute_solve(&mut self) {
-        let max_runs : u32 = 50000; // This should be adjusted so that it takes same time as Greedy
+        let max_runs : u32 = 100000; // This should be adjusted so that it takes same time as Greedy
         let mut runs = 0u32;
 
         let mut p_chg_idx : usize = 0;
