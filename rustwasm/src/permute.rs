@@ -26,9 +26,8 @@ pub fn next_perm_at_idx(p : &mut[usize], idx : usize) -> usize {
 
 pub fn get_perm<T : Copy>(arr : &mut[T], p : &[usize]) {
 	for (i, v) in p.iter().enumerate() {
-		if i + v >= arr.len() {
-			panic!("{i} wat")
+		if *v != 0 {
+			(arr[i], arr[i+v]) = (arr[i+v], arr[i]);
 		}
-		(arr[i], arr[i+v]) = (arr[i+v], arr[i]);
 	}
 }

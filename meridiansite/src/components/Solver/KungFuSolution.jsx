@@ -22,7 +22,7 @@ function KungFuSolution({kfList}) {
   useEffect(() => {
     worker.current.postMessage(kfList.filter((v) => v.toggled).map((v) => v.mstring));
   }, [kfList]);
-
+  
   return (
     <div className="KungFuSolution">
       {ss != null ?
@@ -36,14 +36,22 @@ function KungFuSolution({kfList}) {
             {" - "}
             <span className={ss.filtered_kf_idxs.length > 0 ? "highlight" : "darken"}>Filtered</span>
             {" - "} 
-            <span className={ss.greedy_mstring.length > 0 ? "highlight" : "darken"}>Fast Solved</span>
+            <span className={ss.greedy_solution.mstring.length > 0 ? "highlight" : "darken"}>Fast Solved</span>
             {" - "} 
             <span className={ss.stage == "Finished" ? "highlight" : "darken"}>Brute Solved</span>
           </h3>
-          <h2>Quick Solution ({ss.greedy_mstring.length > 0 ? ss.greedy_mstring.length : "?"} Acupoints):</h2>
-          <h3>{ss.greedy_mstring.length > 0 ? `${meridian_format(ss.greedy_mstring)}` : "???"}</h3>
-          <h2>Best Solution {ss.stage == "Finished" ? "" : "So Far "}({ss.min_mstring.length > 0 ? ss.min_mstring.length : "?"} Acupoints):</h2>
-          <h3>{ss.min_mstring.length > 0 ? `${meridian_format(ss.min_mstring)}` : "???"}</h3>
+          <h2>Quick Solution ({ss.greedy_solution.mstring.length > 0 ? ss.greedy_solution.mstring.length : "?"} Acupoints):</h2>
+          <h3>
+            <span className={["big", "medium", "small", "tiny"][~~(ss.greedy_solution.mstring.length / 20)]}>
+              {ss.greedy_solution.mstring.length > 0 ? `${meridian_format(ss.greedy_solution.mstring)}` : "???"}
+            </span>
+          </h3>
+          <h2>Best Solution {ss.stage == "Finished" ? "" : "So Far "}({ss.min_solution.mstring.length > 0 ? ss.min_solution.mstring.length : "?"} Acupoints):</h2>
+          <h3>
+            <span className={["big", "medium", "small", "tiny"][~~(ss.min_solution.mstring.length / 20)]}>
+              {ss.min_solution.mstring.length > 0 ? `${meridian_format(ss.min_solution.mstring)}` : "???"}
+            </span>
+          </h3>
         </div>
       : <h1>A Solution Will Appear Here After You Select atleast 2 Inner KungFus</h1>}
     </div>

@@ -1,5 +1,4 @@
 use std::{collections::HashMap, usize, vec};
-
 use serde::{Deserialize, Serialize};
 
 use crate::kungfu::KungFu;
@@ -10,13 +9,69 @@ type OverlapMemo = HashMap<u64, HashMap<u64, i32>>;
 #[derive(Serialize, Deserialize)]
 enum SolveStage {
     Init,
-    OverlapMemoed,
+    Memoed,
     Filtered,
     BruteSolving,
     Finished,
 }
 
+// Locations correspond with the original kf list
+#[derive(Clone)]
+#[derive(Serialize, Deserialize)]
+pub struct Solution {
+    pub mstring : String,
+    pub locations : Vec<usize>,
+}
+
+// TODO: Some consideration should be made to
+impl Solution {
+    pub fn build_soln(kfs : &Vec<KungFu>, solution_kf_idxs : &Vec<usize>, memo : &OverlapMemo) -> Solution {
+        // This is stupid, but ya know, never gonna end up with a meridian string at usize::MAX
+        let mut solution = Solution { mstring : String::new(), locations : vec![usize::MAX; kfs.len()]};
+
+        // Build meridian string and note location of component KFs
+        let mut prev_kf_idx : usize = 0;
+        for (i, kf_idx) in solution_kf_idxs.iter().enumerate() {
+            if i == 0 {
+                solution.mstring = kfs[*kf_idx].into();
+                solution.locations[*kf_idx] = 0;
+            } else {
+                let unoverlap_idx = (kfs[prev_kf_idx].length as i32 + memo[&kfs[prev_kf_idx].acupoint_bits][&kfs[*kf_idx].acupoint_bits]) as usize;
+                solution.mstring.push_str(&Into::<String>::into(kfs[*kf_idx])[unoverlap_idx..] );
+                solution.locations[*kf_idx] = solution.mstring.len() - kfs[*kf_idx].length as usize;
+            }
+            prev_kf_idx = *kf_idx;
+        }
+
+        // Find locations of merged KFs (Kfs not in solution_kf_idxs)
+        for (kf_idx, kf_loc) in solution.locations.clone().iter().enumerate() {
+            if *kf_loc == usize::MAX {
+                let mut overlap_pt = -1;
+                // Find earliest point we can merge
+                for other_idx in solution_kf_idxs.iter() {
+                    overlap_pt = memo[&kfs[kf_idx].acupoint_bits][&kfs[*other_idx].acupoint_bits];
+                    if overlap_pt >= 0 {
+                        // Mark where in the mstring we can merge
+                        solution.locations[kf_idx] = solution.locations[*other_idx] + overlap_pt as usize;
+                        break;
+                    }
+                }
+                // Mark merge
+                if overlap_pt >= 0 {
+                    continue;
+                }
+            }
+        }
+
+        solution
+    }
+}
+
 // Create a Solver instance that will work through each solution stage
+// usize has to be used due to deserialization and serialization of refs being impossible
+// Note I could possibly swap the indices with &KungFu to make it easier to use
+// and shove a translation layer to convert that to indices inside of serialization
+// pain in the butt though
 #[derive(Serialize, Deserialize)]
 pub struct Solver {
     pub kfs : Vec<KungFu>,
@@ -30,11 +85,11 @@ pub struct Solver {
 
     // Stage: Greedy Solved
     pub greedy_kf_idxs : Vec<usize>,
-    pub greedy_mstring : String,
+    pub greedy_solution : Solution,
 
     // Stage: Brute Solving
     pub min_perm_idxs : Vec<usize>,
-    pub min_mstring : String,
+    pub min_solution : Solution,
     p : Vec<usize>,
     p_lens : Vec<u32>,
 }
@@ -49,10 +104,10 @@ impl Solver {
             filtered_kf_idxs : Vec::new(),
 
             greedy_kf_idxs : Vec::new(),
-            greedy_mstring : String::new(),
+            greedy_solution : Solution { mstring : String::new(), locations : Vec::new()},
 
             min_perm_idxs : Vec::new(),
-            min_mstring : String::new(),
+            min_solution : Solution { mstring : String::new(), locations : Vec::new()},
             p : Vec::new(),
             p_lens : Vec::new(),
         }
@@ -71,7 +126,7 @@ impl Solver {
                 }
             }
         }
-        self.stage = SolveStage::OverlapMemoed;
+        self.stage = SolveStage::Memoed;
     }
 
     fn filter_mergables(&mut self) {
@@ -115,19 +170,9 @@ impl Solver {
 
         self.greedy_kf_idxs = kf_groups.remove(0);
         // TODO: Some cleanup here, I hate how this looks when it could prolly be done via accumalator
-        let mut prev_kf_idx : usize = 0;
-        for (i, kf_idx) in self.greedy_kf_idxs.iter().enumerate() {
-            if i == 0 {
-                self.greedy_mstring = (&self.kfs[*kf_idx]).into();
-            } else {
-                let overlap = (self.kfs[prev_kf_idx].length as i32 + self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits]) as usize;
-                self.greedy_mstring.push_str(&Into::<String>::into(&self.kfs[*kf_idx])[overlap..] );
-            }
-            prev_kf_idx = *kf_idx;
-        }
-        
 
-        self.min_mstring = self.greedy_mstring.clone();
+        self.greedy_solution = Solution::build_soln(&self.kfs, &self.greedy_kf_idxs, &self.memo);
+        self.min_solution = self.greedy_solution.clone();
         self.min_perm_idxs = self.greedy_kf_idxs.clone();
         self.p.resize(self.greedy_kf_idxs.len(), 0);
         self.p_lens.resize(self.min_perm_idxs.len(), 0);
@@ -135,12 +180,12 @@ impl Solver {
     }
 
     fn brute_solve(&mut self) {
-        let max_runs : u32 = 100000; // This should be adjusted so that it takes same time as Greedy
+        let max_runs : u32 = 300000; // This should be adjusted so that it takes same time as Greedy
         let mut runs = 0u32;
 
         let mut p_chg_idx : usize = 0;
 
-        while self.p[0] < self.greedy_kf_idxs.len() && runs <= max_runs{
+        while self.p[0] < self.greedy_kf_idxs.len() && runs < max_runs{
             let mut kf_perm = self.greedy_kf_idxs.clone();
             get_perm::<usize>(kf_perm.as_mut_slice(), &self.p);
 
@@ -152,7 +197,7 @@ impl Solver {
                     let overlap = self.memo[&self.kfs[kf_perm[i - 1]].acupoint_bits][&self.kfs[kf_perm[i]].acupoint_bits];
                     self.p_lens[i] = self.p_lens[i-1] - (self.kfs[kf_perm[i-1]].length as i32 + overlap) as u32 + self.kfs[kf_perm[i]].length;
                 }
-                if self.p_lens[i] >= self.min_mstring.len() as u32 {
+                if self.p_lens[i] >= self.min_solution.mstring.len() as u32 {
                     // Try next permutation that's different at index i
                     p_chg_idx = next_perm_at_idx(&mut self.p, i);
                     fast_quit = true;
@@ -165,19 +210,9 @@ impl Solver {
                 continue;
             }
 
-            // Update min mstring
+            // Update min solution
             self.min_perm_idxs = kf_perm;
-            let mut prev_kf_idx : usize = 0;
-            for (i, kf_idx) in self.min_perm_idxs.iter().enumerate() {
-                if i == 0 {
-                    self.min_mstring = (&self.kfs[*kf_idx]).into();
-                } else {
-                    let overlap: usize = (self.kfs[prev_kf_idx].length as i32 + self.memo[&self.kfs[prev_kf_idx].acupoint_bits][&self.kfs[*kf_idx].acupoint_bits]) as usize;
-                    self.min_mstring.push_str(&Into::<String>::into(&self.kfs[*kf_idx])[overlap..] );
-                }
-                prev_kf_idx = *kf_idx;
-            }
-
+            self.min_solution = Solution::build_soln(&self.kfs, &self.min_perm_idxs, &self.memo);
 
             // Try next lexigraphic permutation
             p_chg_idx = next_perm(&mut self.p);
@@ -194,7 +229,7 @@ impl Solver {
     pub fn progress(&mut self) {
         match self.stage {
             SolveStage::Init => self.memo_overlaps(),
-            SolveStage::OverlapMemoed => self.filter_mergables(),
+            SolveStage::Memoed => self.filter_mergables(),
             SolveStage::Filtered => self.greedy_solve(),
             SolveStage::BruteSolving => {self.brute_solve()},
             SolveStage::Finished => {}

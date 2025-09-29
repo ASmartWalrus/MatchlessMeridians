@@ -39,6 +39,12 @@ impl From<&String> for KungFu {
     }
 }
 
+impl From<String> for KungFu {
+    fn from(number_string: String) -> Self {
+        return KungFu::from(&number_string);
+    }
+}
+
 impl Into<String> for &KungFu {
     fn into(self) -> String {
         let mut mstring = String::with_capacity(self.length as usize);
@@ -48,5 +54,11 @@ impl Into<String> for &KungFu {
             acubits = acubits >> 2;
         }
         return mstring.chars().rev().collect();
+    }
+}
+
+impl Into<String> for KungFu {
+    fn into(self) -> String {
+        return (&self).into();
     }
 }
