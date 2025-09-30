@@ -1,49 +1,35 @@
 .KungFuSolution {
-    padding: 0;
-    margin: 0;
-    align-content: center;
-    text-align: center;
-    text-wrap: balance;
-    word-wrap: break-word;
+  padding: 0;
+  margin: 0;
+  align-content: center;
+  text-align: center;
+  text-wrap: balance;
+  word-wrap: break-word;
+
+  .paddiv {
+    padding: 4rem;
     h1 {
-        margin: 0;
-        padding: 0;
-        padding-top: 2rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        font-size: 4rem;
+      margin: 0;
+      padding: 0;
+      padding-top: 2rem;
+      font-size: 4rem;
     }
     h2 {
-        margin: 0;
-        padding: 0;
-        padding-top: 1rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        font-size: 3rem;
+      margin: 0;
+      padding: 0;
+      padding-top: 1rem;
+      font-size: 3rem;
     }
     h3 {
-        margin: 0;
-        padding: 0;
-        font-size: 2rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        .highlight {
-            color: #ffb81c;
-        }
-        .darken {
-            color: rgba(155, 155, 155, 1);
-        }
-        .big {
-            font-size: 4rem;
-        }
-        .medium {
-            font-size: 3rem;
-        }
-        .small {
-            font-size: 2rem;
-        }
-        .tiny {
-            font-size: 1rem;
-        }
+      margin: 0;
+      padding: 0;
+      font-size: 2rem;
+      .highlight {
+        color: #ffb81c;
+      }
+      .darken {
+        color: rgba(155, 155, 155, 1);
+      }
     }
+  }
 }

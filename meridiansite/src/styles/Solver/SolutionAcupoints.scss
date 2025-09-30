@@ -1,0 +1,29 @@
+.SolutionAcupoints {
+  margin: 0;
+  padding: 0;
+  min-height: 6rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  display: grid;
+  gap: 0;
+  column-count: auto;
+  grid-auto-flow: column dense;
+  grid-gap: 0;
+
+  .acupoint {
+    margin: 0;
+    padding: 0;
+
+    aspect-ratio: 1;
+    container-type: inline-size;
+    container-name: acupoint;
+    span {
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 110cqi;
+      text-align: center;
+    }
+  }
+}

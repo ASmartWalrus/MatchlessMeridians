@@ -132,17 +132,31 @@ impl Solver {
     fn filter_mergables(&mut self) {
         self.filtered_kf_idxs = (0..self.kfs.len()).collect();
 
+        // Dedup with shared acupoint requirements
         self.filtered_kf_idxs.dedup_by_key(|v| self.kfs[*v].acupoint_bits);
 
         // check against every existing acupoints signature
-        self.filtered_kf_idxs = self.filtered_kf_idxs.iter().filter(|i| -> bool {
-            self.memo.get(&self.kfs[**i].acupoint_bits).and_then(|kf_map| kf_map.iter().find(|(_, v)| **v >= 0)).is_none()
-        }).map(|v| *v).collect();
+        // Filter out both blanks and mergables
+        self.filtered_kf_idxs = self.filtered_kf_idxs.iter().filter_map(|i| -> Option<usize> {
+            if self.kfs[*i].acupoint_bits == 0 {
+                return None;
+            }
+            if self.memo.get(&self.kfs[*i].acupoint_bits).and_then(|kf_map| kf_map.iter().find(|(_, v)| **v >= 0)).is_none() { Some(*i) } else { None }
+        }).collect();
     
         self.stage = SolveStage::Filtered;
     }
 
     fn greedy_solve(&mut self) {
+        if self.filtered_kf_idxs.len() == 0 {
+            self.greedy_solution = Solution { mstring : String::new(), locations : vec![0, self.kfs.len()] };
+            self.min_solution = self.greedy_solution.clone();
+            self.greedy_kf_idxs = Vec::new();
+            self.min_perm_idxs = Vec::new();
+            self.stage = SolveStage::BruteSolving;
+            return;
+        }
+
         let mut kf_groups : Vec::<Vec<usize>> = self.filtered_kf_idxs.iter().map(|i| vec![*i]).collect();
 
         while kf_groups.len() > 1 {
@@ -180,6 +194,11 @@ impl Solver {
     }
 
     fn brute_solve(&mut self) {
+        if self.min_solution.mstring.len() == 0 {
+            self.stage = SolveStage::Finished;
+            return;
+        }
+
         let max_runs : u32 = 300000; // This should be adjusted so that it takes same time as Greedy
         let mut runs = 0u32;
 
@@ -231,7 +250,7 @@ impl Solver {
             SolveStage::Init => self.memo_overlaps(),
             SolveStage::Memoed => self.filter_mergables(),
             SolveStage::Filtered => self.greedy_solve(),
-            SolveStage::BruteSolving => {self.brute_solve()},
+            SolveStage::BruteSolving => self.brute_solve(),
             SolveStage::Finished => {}
         }
     }

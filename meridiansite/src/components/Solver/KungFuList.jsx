@@ -6,7 +6,7 @@ function KungFuList({kungfus, onClick}) {
     <div className="KungFuList">
       <ul>
         {kungfus.map((kf, i) =>
-          <li key={i} >
+          <li key={i}>
               <KungFuButton name={kf.name} meridians={kf.meridians} toggled={kf.toggled} onClick={() => { onClick(i) }} />
           </li>
         )}
