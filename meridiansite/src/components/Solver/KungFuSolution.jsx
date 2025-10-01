@@ -3,20 +3,14 @@ import { useEffect, useRef, useState } from "react"
 import WasmWorker from "@/utils/wasm.worker.js?worker"
 import { meridian_format } from "@/utils/mstring.js";
 import SolutionAcupoints from "@/components/Solver/SolutionAcupoints.jsx"
+import { convert_annotes } from "../../utils/annotes";
 
 
 function KungFuSolution({kfList}) {
+  const inputKfs = useRef(null);
   const worker = useRef(null);
   const ssRef = useRef(null);
-  const [solView, setSolView] = useState({
-    total_kfs : 0,
-    memoed : false,
-    filtered : false,
-    greeded : false,
-    finished : false,
-    greed_solution : "",
-    best_solution : "",
-  });
+  const [solView, setSolView] = useState(null);
 
   useEffect(() => {
     worker.current = new WasmWorker();
@@ -31,27 +25,48 @@ function KungFuSolution({kfList}) {
 
       // A view is preferable due to heavy calc on solution strings and annotations
       setSolView((prev) => {
-        if (prev == null) {
+        if (ss.stage == "Init") {
           return {
             total_kfs : ss.kfs.length,
             memoed : false,
             filtered : false,
             greeded : false,
-            finished : false,
+            bruted : false,
             greed_solution : "",
+            greed_annotes : [],
             best_solution : "",
+            best_annotes : [],
           }
         }
+  
 
-        return {
+        let newSolView = {
           total_kfs : ss.kfs.length,
           memoed : prev.memoed || ss.stage == "Memoed",
           filtered : prev.filtered || ss.stage == "Filtered",
           greeded : prev.greeded || ss.stage == "BruteSolving",
           bruted : prev.bruted || ss.stage == "Finished",
-          greed_solution : (prev.greed_solution == "" || ss.greedy_solution.mstring.length < prev.greed_solution.length) ? meridian_format(ss.greedy_solution.mstring) : prev.greed_solution,
-          best_solution : (prev.best_solution == "" || ss.min_solution.mstring.length < prev.best_solution.length) ? meridian_format(ss.min_solution.mstring) : prev.best_solution
+          greed_solution : prev.greed_solution,
+          greed_annotes : prev.greed_annotes,
+          best_solution : prev.best_solution,
+          best_annotes : prev.best_annotes,
         }
+
+        // Greedy finished
+        if (ss.stage == "BruteSolving" && !prev.greeded) {
+            newSolView.greed_solution = meridian_format(ss.greedy_solution.mstring);
+            newSolView.greed_annotes = convert_annotes(inputKfs.current, ss.greedy_solution.locations);
+            newSolView.best_solution = meridian_format(ss.min_solution.mstring);
+            newSolView.best_annotes = convert_annotes(inputKfs.current, ss.min_solution.locations);
+        }
+        
+        // Bruting
+        if ((ss.stage == "BruteSolving" || ss.stage == "Finished") && ss.min_solution.mstring.length < prev.best_solution.length) {
+          newSolView.best_solution = meridian_format(ss.min_solution.mstring);
+          newSolView.best_annotes = convert_annotes(inputKfs.current, ss.min_solution.locations);
+        }
+        
+        return newSolView;
       });
     }
 
@@ -61,7 +76,8 @@ function KungFuSolution({kfList}) {
   }, []);
 
   useEffect(() => {
-    worker.current.postMessage(kfList.filter((v) => v.toggled).map((v) => v.mstring));
+    inputKfs.current = kfList.filter((v) => v.toggled);
+    worker.current.postMessage(inputKfs.current.map((v) => v.mstring));
   }, [kfList]);
   
   return (
@@ -83,9 +99,9 @@ function KungFuSolution({kfList}) {
               <span className={solView.bruted ? "highlight" : "darken"}>Brute Solved</span>
             </h3>
             <h2>Quick Solution ({solView.greeded ? solView.greed_solution.length : "?"} Acupoints):</h2>
-            <SolutionAcupoints mstring={solView.greed_solution}/>
-            <h2>Best Solution {solView.finished ? "" : "So Far "}({solView.greeded ? solView.best_solution.length : "?"} Acupoints):</h2>
-            <SolutionAcupoints mstring={solView.best_solution}/>
+            <SolutionAcupoints mstring={solView.greed_solution} annotes={solView.greed_annotes}/>
+            <h2>Best Solution {solView.bruted ? "" : "So Far "}({solView.greeded ? solView.best_solution.length : "?"} Acupoints):</h2>
+            <SolutionAcupoints mstring={solView.best_solution} annotes={solView.best_annotes}/>
           </div>
         : <h1>A Solution Will Appear Here After You Select atleast 2 Inner KungFus</h1>}
       </div>

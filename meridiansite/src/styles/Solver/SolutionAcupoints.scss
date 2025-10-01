@@ -1,7 +1,8 @@
 .SolutionAcupoints {
   margin: 0;
   padding: 0;
-  min-height: 6rem;
+  min-height: 10rem;
+  max-height: 20rem;
   margin-left: auto;
   margin-right: auto;
 
@@ -9,11 +10,13 @@
   gap: 0;
   column-count: auto;
   grid-auto-flow: column dense;
-  grid-gap: 0;
+  grid-column-gap: 0;
+  grid-row-gap: 0;
 
   .acupoint {
     margin: 0;
     padding: 0;
+    grid-row: 1;
 
     aspect-ratio: 1;
     container-type: inline-size;
@@ -25,5 +28,39 @@
       font-size: 110cqi;
       text-align: center;
     }
+  }
+
+  .annote {
+    border-radius: 5px;
+    height: 10px;
+    background-color: white;
+    font-size: 10px;
+    color: black;
+
+    &:hover {
+      background-color: #ffb81c;
+
+      .popup {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        display: block;
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        padding: 10px;
+        z-index: 1;
+      }
+    }
+
+    .popup {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      display: none;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      padding: 10px;
+      z-index: 1;
+   }
   }
 }
