@@ -37,30 +37,10 @@
     font-size: 10px;
     color: black;
 
+    border-style: solid;
+
     &:hover {
       background-color: #ffb81c;
-
-      .popup {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        display: block;
-        background-color: #f9f9f9;
-        border: 1px solid #ccc;
-        padding: 10px;
-        z-index: 1;
-      }
     }
-
-    .popup {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      display: none;
-      background-color: #f9f9f9;
-      border: 1px solid #ccc;
-      padding: 10px;
-      z-index: 1;
-   }
   }
 }
