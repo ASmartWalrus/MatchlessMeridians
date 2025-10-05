@@ -200,7 +200,9 @@ impl Solver {
             return;
         }
 
-        let seed_kfs : Vec<&KungFu> = self.greedy_kf_idxs.iter().map(|i| &self.kfs[*i]).collect();
+        // Need telemetry to determine if copying KungFu is better here than refs
+        // Assuming it is due to memory locality of stack
+        let seed_kfs : Vec<KungFu> = self.greedy_kf_idxs.iter().map(|i| self.kfs[*i]).collect();
         let max_runs : u32 = 300000; // This should be adjusted so that it takes same time as Greedy
         let mut runs = 0u32;
 
@@ -208,7 +210,7 @@ impl Solver {
 
         while self.p[0] < self.greedy_kf_idxs.len() && runs < max_runs{
             let mut kf_perm = seed_kfs.clone();
-            get_perm::<&KungFu>(kf_perm.as_mut_slice(), &self.p);
+            get_perm::<KungFu>(kf_perm.as_mut_slice(), &self.p);
 
             let mut fast_quit = false;
             for i in p_chg_idx..kf_perm.len() {
