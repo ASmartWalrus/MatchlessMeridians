@@ -183,13 +183,14 @@ impl Solver {
         }
 
         self.greedy_kf_idxs = kf_groups.remove(0);
-        // TODO: Some cleanup here, I hate how this looks when it could prolly be done via accumalator
-
         self.greedy_solution = Solution::build_soln(&self.kfs, &self.greedy_kf_idxs, &self.memo);
-        self.min_solution = self.greedy_solution.clone();
+
         self.min_perm_idxs = self.greedy_kf_idxs.clone();
-        self.p.resize(self.greedy_kf_idxs.len(), 0);
+        self.min_solution = self.greedy_solution.clone();
+
+        self.p.resize(self.min_perm_idxs.len(), 0);
         self.p_lens.resize(self.min_perm_idxs.len(), 0);
+
         self.stage = SolveStage::BruteSolving;
     }
 
@@ -199,22 +200,23 @@ impl Solver {
             return;
         }
 
+        let seed_kfs : Vec<&KungFu> = self.greedy_kf_idxs.iter().map(|i| &self.kfs[*i]).collect();
         let max_runs : u32 = 300000; // This should be adjusted so that it takes same time as Greedy
         let mut runs = 0u32;
 
         let mut p_chg_idx : usize = 0;
 
         while self.p[0] < self.greedy_kf_idxs.len() && runs < max_runs{
-            let mut kf_perm = self.greedy_kf_idxs.clone();
-            get_perm::<usize>(kf_perm.as_mut_slice(), &self.p);
+            let mut kf_perm = seed_kfs.clone();
+            get_perm::<&KungFu>(kf_perm.as_mut_slice(), &self.p);
 
             let mut fast_quit = false;
             for i in p_chg_idx..kf_perm.len() {
                 if i == 0 {
-                    self.p_lens[0] = self.kfs[kf_perm[0]].length;
+                    self.p_lens[0] = kf_perm[0].length;
                 } else {
-                    let overlap = self.memo[&self.kfs[kf_perm[i - 1]].acupoint_bits][&self.kfs[kf_perm[i]].acupoint_bits];
-                    self.p_lens[i] = self.p_lens[i-1] - (self.kfs[kf_perm[i-1]].length as i32 + overlap) as u32 + self.kfs[kf_perm[i]].length;
+                    let overlap = self.memo[&kf_perm[i - 1].acupoint_bits][&kf_perm[i].acupoint_bits];
+                    self.p_lens[i] = self.p_lens[i-1] - (kf_perm[i-1].length as i32 + overlap) as u32 + kf_perm[i].length;
                 }
                 if self.p_lens[i] >= self.min_solution.mstring.len() as u32 {
                     // Try next permutation that's different at index i
@@ -230,7 +232,8 @@ impl Solver {
             }
 
             // Update min solution
-            self.min_perm_idxs = kf_perm;
+            self.min_perm_idxs = self.greedy_kf_idxs.clone();
+            get_perm::<usize>(self.min_perm_idxs.as_mut_slice(), &self.p);
             self.min_solution = Solution::build_soln(&self.kfs, &self.min_perm_idxs, &self.memo);
 
             // Try next lexigraphic permutation
